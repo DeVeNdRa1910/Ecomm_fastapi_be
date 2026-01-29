@@ -27,4 +27,6 @@ async def get_current_user_by_token(credentials: HTTPAuthorizationCredentials = 
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
     
+    user["_id"] = str(user["_id"])
+    
     return user

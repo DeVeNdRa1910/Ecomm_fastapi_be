@@ -48,10 +48,10 @@ async def update_user_profile(
         if not profile_image.content_type.startswith("image/"):
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Profile picture must be an image")
         
-        if current_user.profile_image is not None:
+        if current_user.get("profile_image"):
             await asyncio.to_thread(
                 cloudinary.uploader.destroy,
-                current_user.public_id
+                current_user["public_id"]
             )
         
         profile_image_upload_result = await asyncio.to_thread(
