@@ -8,3 +8,5 @@ passlib[argon2]
 email-validator
 redis
 python-jose[cryptography]
+cloudinary
+python-multipart
