@@ -8,3 +8,4 @@ class UserInfoPost(BaseModel):
     email: Optional[EmailStr] = None
     address: Optional[str] = Field(None, min_length=12)
     profile_image: Optional[str] = None
+    public_id: Optional[str] = None

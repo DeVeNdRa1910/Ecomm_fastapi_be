@@ -35,6 +35,7 @@ async def update_user_profile_controller(user_data, current_user, db):
             "email",
             "profile_image",
             "address",
+            "public_id"
         ]
         
         for field in allowed_fields:
