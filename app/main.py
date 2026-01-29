@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from dotenv import load_dotenv
-from app.routes import auth_route
+from app.routes import auth_route, userinfo_route
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from app.configs.db import get_db, close_db
@@ -38,3 +38,4 @@ def helth():
     return {"message": "Server is UP and RUNNING"}
 
 app.include_router(auth_route.router, prefix="/auth", tags=["Authentication"])
+app.include_router(userinfo_route.router, prefix="/user", tags=["User Info"])

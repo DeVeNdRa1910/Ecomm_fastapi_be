@@ -102,19 +102,6 @@ async def login_controller(data:RegisterUser, db):
         "access_token": jwt_token,
         "token_type": "bearer"
     }
-    
-    
-async def logged_in_user_info(current_user, db):
-    user_id = ObjectId(current_user["_id"])
-    
-    current_user = await db.users.find_one({"_id": user_id})
-    
-    if not current_user:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    current_user["_id"] = str(current_user["_id"])
-    
-    return jsonable_encoder(current_user)
 
 
 async def change_password_controller(data: ChangePassword, current_user, db):
