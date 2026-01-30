@@ -36,6 +36,7 @@ class Product(BaseModel):
     description: str = Field(...)
     price: float = Field(...)
     category: Optional[CategoryEnum] = Field(...)
+    is_active: bool = Field(...)
     
 class Inventory(Product):
     seller_id: str = Field(...)
