@@ -5,7 +5,9 @@ from app.schemas.product_schema import (
     Inventory
 )
 from app.controllers.product_controller import (
-    add_inventory_controller
+    add_inventory_controller,
+    get_seller_products_controller,
+    get_seller_product_by_id_controller
 )
 from app.services.get_current_user import get_current_user_by_token
 from typing import List, Annotated
@@ -71,3 +73,21 @@ async def add_product_in_stock(
         return add_inventory_resp
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"{e}")
+    
+@router.get('/', status_code=200)
+async def get_seller_products(current_user = Depends(get_current_user_by_token), db = Depends(get_db)):
+    
+    if current_user["role"] != "seller":
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="You are not authorized to perform this action")
+    
+    get_seller_products_resp = await get_seller_products_controller(current_user, db)
+    return get_seller_products_resp 
+
+@router.get("/{product_id}")
+async def get_seller_product_by_id(product_id, current_user = Depends(get_current_user_by_token), db = Depends(get_db)):
+    
+    if current_user["role"] != "seller":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="You are not authorized to perform this action")
+    
+    get_product_resp = await get_seller_product_by_id_controller(product_id, current_user, db)
+    return get_product_resp
