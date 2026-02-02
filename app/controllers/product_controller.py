@@ -65,7 +65,7 @@ async def get_all_products_controller(db):
     
 async def delete_product_by_id_contorller(product_id, current_user, db):
     try:
-        product = await db.inventory.find({"_id": ObjectId(product_id)})
+        product = await db.inventory.find_one({"_id": ObjectId(product_id)})
         
         if not product:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found.")

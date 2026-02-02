@@ -104,7 +104,7 @@ async def get_all_products(db = Depends(get_db)):
 
 @router.delete("/{product_id}", status_code=status.HTTP_200_OK)
 async def delete_product_by_id(product_id, current_user = Depends(get_current_user_by_token), db = Depends(get_db)):
-    delete_product_by_id_resp = delete_product_by_id_contorller(product_id, current_user, db)
+    delete_product_by_id_resp = await delete_product_by_id_contorller(product_id, current_user, db)
     return delete_product_by_id_resp
 
 @router.put("/{product_id}", status_code=201)
