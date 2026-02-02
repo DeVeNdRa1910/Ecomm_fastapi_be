@@ -59,7 +59,7 @@ async def get_all_products_controller(db):
         for product in all_products:
             product["_id"] = str(product["_id"])
         
-        return { "products" : all_products}
+        return all_products
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Failed to fetch products: {e}")
     
@@ -104,3 +104,32 @@ async def update_inventory_controller(data, product_id, db, current_user):
         }
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Inventory not added: {e}")
+    
+    
+async def get_product_controller(product_id, db):
+    try: 
+        product = await db.inventory.find_one({"_id": ObjectId(product_id)})
+        
+        if not product: 
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Producut not found")
+        
+        product["_id"] = str(product["_id"])
+        return product
+
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Failed to fetch the product: {e}")
+    
+    
+async def get_product_by_category_controller(category, db):
+    try:
+        category_products = await db.inventory.find({"category": category}).to_list(length=None)
+        if not category_products:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not available")
+        
+        for product in category_products:
+            product["_id"] = str(product["_id"])
+        
+        return category_products
+    
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Failed to fetch product by category: {e}")

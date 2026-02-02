@@ -3,7 +3,9 @@ from app.configs.db import get_db
 import cloudinary
 from app.schemas.product_schema import (
     Inventory,
-    UpdateInventory, CategoryEnum
+    UpdateInventory, 
+    CategoryEnum,
+    ProductOut
 )
 from app.controllers.product_controller import (
     add_inventory_controller,
@@ -12,6 +14,8 @@ from app.controllers.product_controller import (
     get_all_products_controller, 
     delete_product_by_id_contorller, 
     update_inventory_controller,
+    get_product_controller,
+    get_product_by_category_controller,
 )
 from app.services.get_current_user import get_current_user_by_token
 from typing import List, Optional
@@ -88,7 +92,7 @@ async def get_seller_products(current_user = Depends(get_current_user_by_token),
     get_seller_products_resp = await get_seller_products_controller(current_user, db)
     return get_seller_products_resp 
 
-@router.get("/{product_id}")
+@router.get("/selller/{product_id}")
 async def get_seller_product_by_id(product_id, current_user = Depends(get_current_user_by_token), db = Depends(get_db)):
     
     if current_user["role"] != "seller":
@@ -97,10 +101,15 @@ async def get_seller_product_by_id(product_id, current_user = Depends(get_curren
     get_product_resp = await get_seller_product_by_id_controller(product_id, current_user, db)
     return get_product_resp
 
-@router.get("/all-products/")
+@router.get("/all-products/", response_model=List[ProductOut])
 async def get_all_products(db = Depends(get_db)):
     get_all_products_resp = await get_all_products_controller(db)
     return get_all_products_resp
+
+@router.get('/{product_id}', response_model=ProductOut)
+async def get_product_by_id(product_id, db = Depends(get_db)):
+    get_product_resp = await get_product_controller(product_id, db)
+    return get_product_resp
 
 @router.delete("/{product_id}", status_code=status.HTTP_200_OK)
 async def delete_product_by_id(product_id, current_user = Depends(get_current_user_by_token), db = Depends(get_db)):
@@ -164,3 +173,8 @@ async def update_product_in_stock(
     
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"{e}")
+    
+@router.post("/by-category", response_model=List[ProductOut])
+async def get_products_by_category(category: str = Form(), db = Depends(get_db)):
+    get_product_by_category_resp = await get_product_by_category_controller(category, db)
+    return get_product_by_category_resp
