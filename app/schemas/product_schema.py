@@ -35,7 +35,7 @@ class Product(BaseModel):
     title: str = Field(...)
     description: str = Field(...)
     price: float = Field(...)
-    category: Optional[CategoryEnum] = Field(...)
+    category: CategoryEnum = Field(...)
     is_active: bool = Field(...)
     
 class Inventory(Product):
@@ -44,4 +44,14 @@ class Inventory(Product):
     product_image_urls: List[str] = Field(default_factory=list)
     product_image_public_ids: List[str] = Field(default_factory=list)
 
+class UpdateInventory(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    price: Optional[float] = None
+    category: Optional[CategoryEnum] = None
+    seller_id: Optional[str] = None
+    quantity: Optional[int] = None
+    product_image_urls: Optional[List[str]] = None
+    product_image_public_ids: Optional[List[str]] = None
+    is_active: Optional[bool] = None
     

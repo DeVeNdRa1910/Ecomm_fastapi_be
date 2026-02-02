@@ -81,3 +81,17 @@ async def delete_product_by_id_contorller(product_id, current_user, db):
         
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Failed to delete product: {e}")
+
+async def update_inventory_controller(data, product_id, db, current_user):
+    product_data = data.model_dump()
+    try:
+        product_update_result = await db.inventory.update_one({"_id": ObjectId(product_id)}, {"$set": product_data})
+        
+        if product_update_result.matched_count == 0:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
+        
+        return {
+            "message": f"{product_data["title"]} updated successfully"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Inventory not added: {e}")
