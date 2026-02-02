@@ -85,12 +85,13 @@ async def delete_product_by_id_contorller(product_id, current_user, db):
 async def update_inventory_controller(data, product_id, db, current_user):
     product_data = data.model_dump(exclude_none=True)
     
-    try:
-        existed_product = await db.inventory.find_one({"_id": product_id})
-        if existed_product["seller_id"] != current_user["_id"]:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="You are not authorized to update this product")
-    except Exception as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
+    existed_product = await db.inventory.find_one({"_id": ObjectId(product_id)})
+
+    if not existed_product:
+        raise HTTPException(404, "Product not found")
+
+    if existed_product["seller_id"] != str(current_user["_id"]):
+        raise HTTPException(401, "You are not authorized")
     
     try:
         product_update_result = await db.inventory.update_one({"_id": ObjectId(product_id)}, {"$set": product_data})
@@ -99,7 +100,7 @@ async def update_inventory_controller(data, product_id, db, current_user):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
         
         return {
-            "message": f"{product_data["title"]} updated successfully"
+            "message": f"Product updated successfully"
         }
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Inventory not added: {e}")
