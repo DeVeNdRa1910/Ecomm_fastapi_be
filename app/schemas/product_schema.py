@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, EmailStr, field_validator
+from pydantic import BaseModel, Field, EmailStr, field_validator, computed_field
 from datetime import datetime, timezone
 from typing import Optional, List
 from enum import Enum
@@ -43,6 +43,14 @@ class Inventory(Product):
     quantity: int = Field(...)
     product_image_urls: List[str] = Field(default_factory=list)
     product_image_public_ids: List[str] = Field(default_factory=list)
+    
+    @computed_field
+    @property
+    def in_stock(self) -> bool :
+        if self.quantity > 0:
+            return True
+        else:
+            return False
 
 class UpdateInventory(BaseModel):
     title: Optional[str] = None
@@ -53,5 +61,16 @@ class UpdateInventory(BaseModel):
     quantity: Optional[int] = None
     product_image_urls: Optional[List[str]] = None
     product_image_public_ids: Optional[List[str]] = None
+    in_stock: bool = Field(...)
     is_active: Optional[bool] = None
     
+class ProductOut(BaseModel):
+    id: str = Field(alias="_id")
+    title: str = Field(...)
+    description: str = Field(...)
+    price: float = Field(...)
+    category: str = Field(...)
+    seller_id: str = Field(...)
+    product_image_urls: Optional[List[str]] =Field(...)
+    is_active: bool = Field(...)
+    in_stock: bool = Field(...)

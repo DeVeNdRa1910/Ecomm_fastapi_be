@@ -1,6 +1,11 @@
 from fastapi import FastAPI
 from dotenv import load_dotenv
-from app.routes import auth_route, userinfo_route, product_route
+from app.routes import (
+    auth_route, 
+    userinfo_route, 
+    product_route,
+    cart_route,
+)
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from app.configs.db import get_db, close_db
@@ -40,3 +45,4 @@ def helth():
 app.include_router(auth_route.router, prefix="/auth", tags=["Authentication"])
 app.include_router(userinfo_route.router, prefix="/user", tags=["User Info"])
 app.include_router(product_route.router, prefix="/product", tags=["Products"])
+app.include_router(cart_route.router, prefix="/cart", tags=["Cart"])
