@@ -15,7 +15,7 @@ async def create_order(order: OrderCreate, db = Depends(get_db), current_user = 
     create_order_resp = await create_order_controller(order, db, current_user)
     return create_order_resp
 
-@router.get("/get-orders", dependencies=[Depends(get_current_user_by_token)], status_code=status.HTTP_200_OK)
-async def get_created_orders(db = Depends(get_db)):
-    get_orders_resp = await get_orders_controller(db)
+@router.get("/get-orders", status_code=status.HTTP_200_OK)
+async def get_created_orders(db = Depends(get_db), current_user = Depends(get_current_user_by_token)):
+    get_orders_resp = await get_orders_controller(db, current_user)
     return get_orders_resp

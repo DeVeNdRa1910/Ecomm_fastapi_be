@@ -1,7 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import List
 from enum import Enum
-from .product_schema import CategoryEnum
 
 class PaymentStatus(str, Enum):
     pending = "pending"
@@ -21,4 +20,5 @@ class OrderCreate(BaseModel):
     address: str = Field(...)
     quantity: int = Field(...)
     unit_price: float = Field(...)
+    is_delivered: bool = Field(default=False)
     
