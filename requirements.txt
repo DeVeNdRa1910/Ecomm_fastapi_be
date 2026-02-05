@@ -5,6 +5,7 @@ argon2-cffi==25.1.0
 argon2-cffi-bindings==25.1.0
 certifi==2026.1.4
 cffi==2.0.0
+charset-normalizer==3.4.4
 click==8.3.1
 cloudinary==1.44.1
 cryptography==46.0.3
@@ -39,6 +40,7 @@ python-jose==3.5.0
 python-multipart==0.0.21
 PyYAML==6.0.3
 redis==7.1.0
+requests==2.32.5
 rich==14.3.0
 rich-toolkit==0.17.1
 rignore==0.7.6
@@ -47,6 +49,7 @@ sentry-sdk==2.50.0
 shellingham==1.5.4
 six==1.17.0
 starlette==0.50.0
+stripe==14.3.0
 typer==0.21.1
 typing-inspection==0.4.2
 typing_extensions==4.15.0

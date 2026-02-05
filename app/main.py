@@ -1,15 +1,19 @@
 from fastapi import FastAPI
 from dotenv import load_dotenv
 from app.routes import (
-    auth_route, 
+    auth_route,
+    strip_route, 
     userinfo_route, 
     product_route,
-    cart_route,
+    cart_route, 
+    order_route
 )
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from app.configs.db import get_db, close_db
 from fastapi.security import OAuth2PasswordBearer
+from app.configs.ENV import ENV_Config
+import stripe
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
@@ -26,7 +30,9 @@ async def lifespan(app: FastAPI):
 
 load_dotenv()
 
-origins = ["http://localhost","http://localhost:3000"]
+origins = ["http://localhost", ENV_Config.FE_BASE_URL]
+
+stripe.api_key = ENV_Config.STRIPE_SECRET_KEY
 
 app = FastAPI(lifespan=lifespan)
 
@@ -46,3 +52,5 @@ app.include_router(auth_route.router, prefix="/auth", tags=["Authentication"])
 app.include_router(userinfo_route.router, prefix="/user", tags=["User Info"])
 app.include_router(product_route.router, prefix="/product", tags=["Products"])
 app.include_router(cart_route.router, prefix="/cart", tags=["Cart"])
+app.include_router(strip_route.router, prefix="/payment", tags=['Checkkout and payment'])
+app.include_router(order_route.router, prefix="/order", tags=["Order"])
