@@ -259,7 +259,6 @@ async def get_monthly_growth_controller(db, current_user):
     seller_id = ObjectId(current_user["_id"])
 
     now = datetime.now(timezone.utc)
-
     current_month = now.month
     current_year = now.year
 
@@ -269,13 +268,6 @@ async def get_monthly_growth_controller(db, current_user):
     else:
         prev_month = current_month - 1
         prev_year = current_year
-
-    if prev_month == 1:
-        second_prev_month = 12
-        second_prev_year = prev_year - 1
-    else:
-        second_prev_month = prev_month - 1
-        second_prev_year = prev_year
 
     pipeline = [
 
