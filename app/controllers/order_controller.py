@@ -253,3 +253,75 @@ async def export_seller_users_controller(db, current_user):
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Failed to get users: {e}")
     
+
+async def get_monthly_growth_controller(db, current_user):
+
+    seller_id = ObjectId(current_user["_id"])
+
+    now = datetime.now(timezone.utc)
+
+    current_month = now.month
+    current_year = now.year
+
+    if current_month == 1:
+        prev_month = 12
+        prev_year = current_year - 1
+    else:
+        prev_month = current_month - 1
+        prev_year = current_year
+
+    if prev_month == 1:
+        second_prev_month = 12
+        second_prev_year = prev_year - 1
+    else:
+        second_prev_month = prev_month - 1
+        second_prev_year = prev_year
+
+    pipeline = [
+
+        {
+            "$match": {
+                "seller_id": seller_id
+            }
+        },
+
+        {
+            "$group": {
+                "_id": {
+                    "year": {"$year": "$created_at"},
+                    "month": {"$month": "$created_at"}
+                },
+                "total_sales": {"$sum": "$unit_price"}
+            }
+        }
+    ]
+
+    data = await db.order.aggregate(pipeline).to_list(length=None)
+    
+    print(data)
+
+    current_sales = 0
+    prev_sales = 0
+
+    for item in data:
+        year = item["_id"]["year"]
+        month = item["_id"]["month"]
+
+        if year == current_year and month == current_month:
+            current_sales = item["total_sales"]
+
+        if year == prev_year and month == prev_month:
+            prev_sales = item["total_sales"]
+
+    if prev_sales == 0:
+        growth = 100 if current_sales > 0 else 0
+    else:
+        growth = ((current_sales - prev_sales) / prev_sales) * 100
+
+    return {
+        "current_month": f"{current_month}-{current_year}",
+        "previous_month": f"{prev_month}-{prev_year}",
+        "current_month_sales": current_sales,
+        "previous_month_sales": prev_sales,
+        "growth_percentage": round(growth, 2)
+    }
