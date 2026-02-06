@@ -46,7 +46,11 @@ async def stripe_webhook(request: Request):
         event = stripe.Webhook.construct_event(payload, sig_header, endpoint_secret)
         session = event["data"]["object"]
         user_id = session["metadata"]["user_id"]
-        return {"status": "success", "id": session["id"]}
+        return {
+            "status": "success", 
+            "id": session["id"], 
+            "user_id": user_id
+        }
         
     except stripe.error.SignatureVerificationError as e:
         return {"status": f"invalid signature: {e}"}
