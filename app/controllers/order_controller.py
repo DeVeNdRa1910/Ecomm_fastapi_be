@@ -4,6 +4,9 @@ from datetime import datetime, timezone
 from app.schemas.order_schema import (
     PaymentStatus
 )
+import csv
+import io
+from fastapi.responses import StreamingResponse
 from bson import ObjectId
 
 async def create_order_controller(order: OrderCreate, db, current_user):
@@ -56,8 +59,6 @@ async def get_orders_controller(db, current_user):
         
         {"$unwind": "$user"},
 
-        
-
        {
             "$project": {
                 "_id": 0,
@@ -100,3 +101,219 @@ async def get_orders_controller(db, current_user):
     
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Failed to get orders: {e}")
+    
+
+async def get_user_for_sellers_controllers(current_user, db):
+    # I want all the user who baught the  product 
+    pipeline = [
+        {
+            "$match": {
+                "seller_id": ObjectId(current_user["_id"])
+            }
+        },
+        
+        {
+            "$lookup": {
+                "from": "users",
+                "localField": "user_id",
+                "foreignField": "_id",
+                "as": "user"
+            }
+        },
+        
+        {"$unwind": "$user"},
+        
+        {
+            "$lookup": {
+                "from": "inventory",
+                "localField": "product_id",
+                "foreignField": "_id",
+                "as": 'product'
+            }
+        },
+        
+        {"$unwind": "$product"},
+        
+        {
+            "$project": {
+                "_id": 0,
+                "first_name": "$user.first_name",
+                "last_name": "$user.last_name",
+                "profile_image": "$user.profile_image",
+                "product_name": "$product.title",
+                "product_price": "$product.price",
+                "product_images":"$product.product_image_urls",
+                "last_ordered_time": "$created_at"
+            }
+        },
+        
+        {
+            "$sort": {
+                "last_ordered_time": -1
+            }
+        }
+    ]
+    
+    try:
+        users = await db.order.aggregate(pipeline).to_list(length=None)
+        
+        if not users:
+            return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Users are not avialables")
+        
+        return users
+    
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Failed to get users: {e}")
+    
+    
+async def export_seller_users_controller(db, current_user):
+    pipeline = [
+        {
+            "$match": {
+                "seller_id": ObjectId(current_user["_id"])
+            }
+        },
+        
+        {
+            "$lookup": {
+                "from": "users",
+                "localField": "user_id",
+                "foreignField": "_id",
+                "as": "user"
+            }
+        },
+        
+        {"$unwind": "$user"},
+        
+        {
+            "$lookup": {
+                "from": "inventory",
+                "localField": "product_id",
+                "foreignField": "_id",
+                "as": 'product'
+            }
+        },
+        
+        {"$unwind": "$product"},
+        
+        {
+            "$project": {
+                "_id": 0,
+                "first_name": "$user.first_name",
+                "last_name": "$user.last_name",
+                "profile_image": "$user.profile_image",
+                "product_name": "$product.title",
+                "product_images":"$product.product_image_urls",
+                "last_ordered_time": "$created_at"
+            }
+        },
+        
+        {
+            "$sort": {
+                "last_ordered_time": -1
+            }
+        }
+    ]
+    
+    try:
+        data = await db.order.aggregate(pipeline).to_list(length=None)
+        
+        output = io.StringIO()
+        writer = csv.writer(output)
+
+        writer.writerow([
+            "First Name",
+            "Last Name",
+            "Profile Image",
+            "Product Name",
+            "Product Images",
+            "Last Ordered Time"
+        ])
+        
+        for row in data:
+            writer.writerow([
+                row["first_name"],
+                row["last_name"],
+                row["profile_image"],
+                row["product_name"],
+                ", ".join(row["product_images"]),
+                row["last_ordered_time"]
+            ])
+
+        output.seek(0)
+        
+        return StreamingResponse(
+            output,
+            media_type="text/csv",
+            headers={
+                "Content-Disposition": "attachment; filename=seller_orders_report.csv"
+            }
+        )
+
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Failed to get users: {e}")
+    
+
+async def get_monthly_growth_controller(db, current_user):
+
+    seller_id = ObjectId(current_user["_id"])
+
+    now = datetime.now(timezone.utc)
+    current_month = now.month
+    current_year = now.year
+
+    if current_month == 1:
+        prev_month = 12
+        prev_year = current_year - 1
+    else:
+        prev_month = current_month - 1
+        prev_year = current_year
+
+    pipeline = [
+
+        {
+            "$match": {
+                "seller_id": seller_id
+            }
+        },
+
+        {
+            "$group": {
+                "_id": {
+                    "year": {"$year": "$created_at"},
+                    "month": {"$month": "$created_at"}
+                },
+                "total_sales": {"$sum": "$unit_price"}
+            }
+        }
+    ]
+
+    data = await db.order.aggregate(pipeline).to_list(length=None)
+    
+    print(data)
+
+    current_sales = 0
+    prev_sales = 0
+
+    for item in data:
+        year = item["_id"]["year"]
+        month = item["_id"]["month"]
+
+        if year == current_year and month == current_month:
+            current_sales = item["total_sales"]
+
+        if year == prev_year and month == prev_month:
+            prev_sales = item["total_sales"]
+
+    if prev_sales == 0:
+        growth = 100 if current_sales > 0 else 0
+    else:
+        growth = ((current_sales - prev_sales) / prev_sales) * 100
+
+    return {
+        "current_month": f"{current_month}-{current_year}",
+        "previous_month": f"{prev_month}-{prev_year}",
+        "current_month_sales": current_sales,
+        "previous_month_sales": prev_sales,
+        "growth_percentage": round(growth, 2)
+    }
